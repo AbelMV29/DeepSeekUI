@@ -1,0 +1,74 @@
+﻿@using System.Security.Claims
+<div class="modal fade" id="createChatModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Crear nuevo chat</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="create-chat-form">
+                    <p>Recuerda que para guardar el historial de mensajes debes crear un chat.</p>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Nombre del chat</label>
+                        <input id="title" name="title" class="form-control"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button form="create-chat-form" type="submit" class="btn btn-primary" id="create-chat-btn">Crear Chat</button>
+            </div>
+        </div>
+    </div>
+</div>
+@* 
+<div class="modal fade" id="deleteChatModal" chat-id-delete="" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Eliminar chat</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="delete-chat-form" asp-action="Delete" asp-controller="Chat">
+                    <div class="alert alert-danger" id="alert-delete-chat"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button form="delete-chat-form" type="submit" class="btn btn-danger">Eliminar Chat</button>
+            </div>
+        </div>
+    </div>
+</div> *@
+<script type="module">
+    const modalElement = document.getElementById("createChatModal");
+    const formElement = document.querySelector('#create-chat-form');
+    const myModal = new bootstrap.Modal(modalElement, { keyboard: false });
+    const error = document.querySelector("#errorElemenntChat");
+
+    modalElement.addEventListener('hidden.bs.modal', function (e) {
+        formElement.title.value = '';
+    })
+    formElement.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const title = e.target.title.value;
+        const userId = "@(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value)";
+
+
+        const request = {
+            title: title,
+            userId: userId
+        }
+
+        await createChat(request, error);
+
+        myModal.hide();
+    });
+    document.querySelector('#create-chat-btn').addEventListener('click', function () {
+        myModal.hide();
+    });
+</script>

@@ -1,0 +1,86 @@
+﻿@using DeepSeekUI.Application.Dtos
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model GetChatsUserResponse[]
+
+
+<aside class="d-flex flex-column col-12 col-md-4 col-xl-3 col-xxl-2 border-end px-0">
+    @if(User.Identity.IsAuthenticated)
+    {
+        <button type="button" class="btn btn-success mx-2 mb-1" data-bs-toggle="modal" data-bs-target="#createChatModal">Crear nuevo chat</button>
+        <hr class="m-0 mx-0" />
+        @if(Model.Length==0)
+        {
+            <p class="p-2">No tienes chats iniciados</p>
+        }
+        else
+        {
+            <button type="button" class="d-bloc d-md-none btn btn-success mx-2 mb-1" data-bs-toggle="collapse" data-bs-target="#content-chats">Seleccionar chat</button>
+            <ul class="w-100 px-0 list-unstyled collapse" id="content-chats">
+                <li class="list-unstyled">
+                    <a asp-action="Index" asp-controller="Home" class="d-flex flex-column p-3 p-xxl-4 rounded-1 text-primary">
+                        Ir a chat temporal
+                    </a>
+                </li>
+                <hr class="m-0 mx-0" />
+                @foreach(var chat in Model)
+                {
+                    <li class="@(chat.ChatId == ViewBag.ChatId? "chat-selected":"") d-flex w-100 justify-content-between align-items-center">
+                        <a asp-action="Index" asp-controller="Home" asp-route-chat="@chat.ChatId" class="d-flex flex-column p-3 p-xxl-4 rounded-1 chat" id="@chat.ChatId">
+                            <text>@chat.Title</text>
+                            <text>@chat.LastModified</text>
+                        </a>
+                        @* <button type="button" class="btn btn-outline-danger mx-2 mb-1" data-bs-toggle="modal" data-bs-target="#deleteChatModal">Eliminar</button> *@
+                    </li>
+                    <hr class="m-0 mx-0"/>
+                }
+            </ul>
+        }
+    }
+    else if (ViewBag.SideChatError is not null)
+    {
+        <p class="text-danger">@ViewBag.SideChatError</p>
+    }
+    else
+    {
+        <p class="mx-2">Para ver tus chats primero debes entrar con una cuenta</p>
+        <a asp-controller="Auth" asp-action="Login" class="btn btn-primary mx-2 mb-1">Iniciar sesión</a>
+    }
+</aside>
+<style>
+    #content-chats > li {
+        transition-duration:.2s;
+    }
+    #content-chats > li:hover
+    {
+        background-color: #CCCCCC;
+    }
+
+    .chat-selected {
+        background-color: #DDDDDD;
+    }
+
+    #content-chats > li>a{
+        text-decoration:none;
+        color:black;
+    }
+</style>
+
+<script type="module">
+    const element = document.querySelector("#content-chats");
+    function checkWidth () {
+
+        if (window.innerWidth > 768) {
+            element.classList.remove("collapse");
+        } else {
+            element.classList.add("collapse");
+        }
+    }
+    checkWidth();
+    window.addEventListener("resize", function () {
+        checkWidth();
+    });
+</script>

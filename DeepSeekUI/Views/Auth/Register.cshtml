@@ -1,0 +1,58 @@
+@using DeepSeekUI.Application.Dtos.Identity
+@{
+    ViewData["Title"] = "Ingresar";
+}
+@model CreateUserRequest
+<form method="post" class="col-10 col-md-8 col-xl-6 d-flex flex-column">
+
+    <h1>Ingresar</h1>
+    <div class="mb-3">
+        <label asp-for="UserName" class="form-label">Nombre de usuario</label>
+        <input type="text" class="form-control" asp-for="UserName">
+        <span class="text-danger" asp-validation-for="UserName"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Correo Electrónico</label>
+        <input type="email" class="form-control" asp-for="Email">
+        <span class="text-danger" asp-validation-for="Email"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label">Contraseña</label>
+        <div class="d-flex flex-column position-relative justify-content-center">
+            <input asp-for="Password" type="password" class="form-control">
+            <button type="button" class="position-absolute align-self-end px-2 mx-2" id="show-password">Ver</button>
+        </div>
+        <span class="text-danger" asp-validation-for="Password"></span>
+    </div>
+    @if (ViewBag.LoginError is not null)
+    {
+        <span class="alert alert-danger">@ViewBag.LoginError</span>
+    }
+    <button type="submit" class="btn btn-primary">Ingresar</button>
+</form>
+
+<style>
+
+</style>
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial"></partial>
+}
+<script type="module">
+    const showPassword = document.getElementById("show-password");
+    const password = document.getElementById("Password");
+
+    let isVisible = false;
+
+    showPassword.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isVisible) {
+            password.setAttribute('type', 'password');
+        }
+        else {
+            password.setAttribute('type', 'text');
+        }
+        isVisible = !isVisible;
+    })
+</script>

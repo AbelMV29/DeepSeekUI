@@ -1,0 +1,176 @@
+﻿@using DeepSeekUI.Application.Dtos
+@using System.Security.Claims
+@using DeepSeekUI.Domain.Entities
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model GetFullChatResponse?
+
+@if(ViewBag.ChatError is not null)
+{
+    <div class="alert alert-danger">@ViewBag.ChatError</div>
+}
+else
+{
+    <div class="d-flex flex-column gap-3 w-full">
+        <form id="type-chat-form">
+            <h4 class="fw-light">Tipo de chat</h4>
+            <label for="temp-chat-input" id="temp-chat" class="p-1 rounded-start @(Model is null? "bg-primary":"bg-secondary")">
+                Temporal
+                <input value="temp" id="temp-chat-input" class="d-none" type="radio" name="type-chat" />
+            </label>
+            <label class="rounded-end p-1 @(Model is not null? "bg-primary":"bg-secondary")" id="save-chat" for="save-chat-input">
+                Con guardado
+                <input value="save" id="save-chat-input" class="d-none" type="radio" name="type-chat" />
+            </label>
+
+        </form>
+        <div class="d-flex flex-column gap-3 w-full" id="content-chat">
+            <div id="content-messages" class="d-flex flex-column gap-2">
+                @if(Model is not null && Model.Messages.Length > 0)
+                {
+                    foreach(var message in Model.Messages)
+                    {
+                        <div class="p-2 text-white rounded shadow @(message.MessageType is MessageType.Question ? "bg-primary align-self-end": "bg-secondary align-self-start")">
+                            @message.Message @message.Date
+                        </div>
+                    }
+                }
+            </div>
+            <span id="errors" class="alert alert-danger" role="alert"></span>
+            <div class="d-none spinner-grow text-primary" role="status" id="spinner">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <form class="d-flex justify-content-between gap-4 flex-row" id="form-message">
+                <textarea id="text-input" class="w-100" rows="2" placeholder="Escribe algo..."></textarea>
+                <button type="submit" id="button-submit" class="btn btn-primary">Enviar</button>
+            </form>
+        </div>
+
+    </div>
+}
+<style>
+    form > label {
+        color: white;
+    }
+</style>
+<script src="~/js/chat-service.js" asp-append-version="true"></script>
+<script type="module">
+
+    const chatId = "@(Model is null? null: Model.Chat.ChatId)";
+    const userId = "@(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value)";
+
+
+    const contentChatElement = document.getElementById("content-chat");
+    const formMessageElement = document.getElementById("form-message");
+    const errorsElement = document.getElementById("errors");
+    const parentElement = document.getElementById("content-messages");
+    const textAreaInput = document.getElementById("text-input");
+    const buttonSubmit = document.getElementById("button-submit");
+    const spinnerElement = document.getElementById("spinner");
+
+    let loaded = true;
+
+    buttonSubmit.classList.add('disabled');
+    errorsElement.classList.add("d-none");
+
+    textAreaInput.addEventListener("keydown", function (event) {
+        if (event.target.value) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                formMessageElement.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+            }
+        }
+        else if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+       
+    });
+
+    textAreaInput.addEventListener('input', function (event) {
+        if (textAreaInput.value.length > 0) {
+            buttonSubmit.classList.remove("disabled");
+        }
+        else {
+            buttonSubmit.classList.add("disabled");
+            formMessageElement.removeEventListener('submit', function (event) { });
+        }
+    })
+
+    formMessageElement.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const text = textAreaInput.value;
+        const requestModel = {
+            message: text,
+            chatId: (chatId != '' && chatId ? chatId: null),
+            userId: userId
+        }
+        setButtonOff();
+        addMessageChild(text, new Date().toLocaleString(), true)
+        const response = await sendMessage(requestModel, errorsElement, parentElement);
+        addMessageChild(response.value.message, new Date(response.value.createdTime).toLocaleString(), false);
+        document.getElementById("text-input").value = '';
+        setButtonOn()
+    })
+
+    function setButtonOff() {
+        loaded = false;
+        buttonSubmit.classList.add("disabled");
+        spinnerElement.classList.remove("d-none");
+        textAreaInput.setAttribute("disabled", "true")
+    }
+
+    function setButtonOn() {
+        loaded = true;
+        buttonSubmit.classList.remove("disabled");
+        spinnerElement.classList.add("d-none")
+        textAreaInput.removeAttribute("disabled");
+    }
+
+    function addMessageChild(text, date, isQuestion) {
+        let className = 'p-2 text-white rounded shadow ';
+        if (isQuestion) {
+            className += 'bg-primary align-self-end';
+        }
+        else {
+            className += 'bg-secondary align-self-start';
+        }
+        const divMessageChild = document.createElement('div');
+        divMessageChild.className = className
+        divMessageChild.textContent = text + ' ' + date;
+        parentElement.appendChild(divMessageChild);
+    }
+
+    // const formTypeChat = document.getElementById("type-chat-form");
+    // formTypeChat["type-chat"].value = 'temp';
+    // const tempChat = document.getElementById("temp-chat");
+    // const saveChat = document.getElementById("save-chat");
+    
+
+    // document.querySelectorAll('input[name="type-chat"]').forEach(function (input) {
+    //     input.addEventListener('change', setClassInput);
+    // })
+
+    //setClassInput();
+    // function setClassInput() {
+    //     const actualValueForm = formTypeChat["type-chat"].value;
+    //     console.log(actualValueForm);
+    //     const isTemp = actualValueForm === 'temp';
+    //     changeClass(tempChat, isTemp, 'bg-primary', 'bg-secondary', activeChat, inactiveChat);
+    //     changeClass(saveChat, !isTemp, 'bg-primary', 'bg-secondary');
+    // }
+
+    // function inactiveChat() {
+    //     setButtonOff()
+    //     contentChatElement.style.opacity = 0.66;
+    //     contentChatElement.style.filter = "blur(1px)";
+    // }
+
+    // function activeChat() {
+    //     setButtonOn()
+    //     contentChatElement.style.filter = "blur(0px)";
+    //     contentChatElement.style.opacity = 1.0;
+    // }
+</script>

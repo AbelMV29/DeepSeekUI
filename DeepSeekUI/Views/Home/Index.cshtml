@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<div class="d-flex flex-column gap-0 w-100 justify-content-between" id="main-chat">
+    <div class="text-center">
+        <h1 class="display-4">Chatea con DeepSeek en local</h1>
+        <p>Recuerda que debes tener instalado el modelo <a href="https://ollama.com/library/deepseek-r1:8b" target="_blank">deepseek-r1:8b</a> para poder usarlo en esta UI</p>
+    </div>
+    @* <partial name="_ChatView"></partial> *@
+    <div id="chat-component">
+        @await Component.InvokeAsync("Chat", ViewBag.ChatId)
+    </div>
+</div>
+
+<style>
+    #main-chat
+    {
+        max-width:900px;
+    }
+</style>
+
